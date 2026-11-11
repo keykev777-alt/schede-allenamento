@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { errorMessage, must, useAsync } from '../../lib/useAsync'
 import { useAction } from '../../lib/useAction'
-import { deleteDays, deleteProgram, swapOrder } from '../../lib/programs'
+import { deleteDays, deleteProgram, duplicateDay, swapOrder } from '../../lib/programs'
 import { useAuth } from '../../auth/useAuth'
 import type { Exercise, Profile, Program, ProgramDay, ProgramExercise } from '../../types/database'
 import ProgramForm from './ProgramForm'
@@ -132,6 +132,7 @@ export default function ProgramEditor() {
           catalog={catalog}
           catalogById={catalogById}
           run={run}
+          onDuplicate={() => run(() => duplicateDay(day, nextOrder(days)))}
           onMoveUp={i > 0 ? () => run(() => swapOrder('program_days', day, days[i - 1])) : undefined}
           onMoveDown={
             i < days.length - 1
@@ -163,12 +164,23 @@ interface DayCardProps {
   catalog: Exercise[]
   catalogById: Map<string, Exercise>
   run: Run
+  onDuplicate: () => Promise<boolean>
   onMoveUp?: () => void
   onMoveDown?: () => void
 }
 
-function DayCard({ day, items, catalog, catalogById, run, onMoveUp, onMoveDown }: DayCardProps) {
+function DayCard({
+  day,
+  items,
+  catalog,
+  catalogById,
+  run,
+  onDuplicate,
+  onMoveUp,
+  onMoveDown,
+}: DayCardProps) {
   const [renaming, setRenaming] = useState(false)
+  const [duplicating, setDuplicating] = useState(false)
   const [label, setLabel] = useState(day.label)
   const [adding, setAdding] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -179,6 +191,12 @@ function DayCard({ day, items, catalog, catalogById, run, onMoveUp, onMoveDown }
       supabase.from('program_days').update({ label: label.trim() }).eq('id', day.id),
     )
     if (ok) setRenaming(false)
+  }
+
+  const duplicate = async () => {
+    setDuplicating(true)
+    await onDuplicate()
+    setDuplicating(false)
   }
 
   const removeDay = () => {
@@ -245,6 +263,9 @@ function DayCard({ day, items, catalog, catalogById, run, onMoveUp, onMoveDown }
             </button>
             <button className="btn btn-secondary btn-sm" onClick={() => setRenaming(true)}>
               Rinomina
+            </button>
+            <button className="btn btn-secondary btn-sm" disabled={duplicating} onClick={duplicate}>
+              {duplicating ? 'Duplico…' : 'Duplica'}
             </button>
             <button className="btn btn-danger btn-sm" onClick={removeDay}>
               Elimina
