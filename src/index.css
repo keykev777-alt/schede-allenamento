@@ -190,6 +190,22 @@ section.card + section.card, section.card + form.card { margin-top: 0; }
 .check-btn.is-done { border-color: var(--success); background: var(--success); color: #fff; }
 .check-btn:disabled { opacity: 0.6; }
 
+/* Selettore RPE: 5 colonne su mobile, 10 su schermi più larghi */
+.rpe { border: 0; padding: 0; margin: 0; min-width: 0; }
+.rpe-label { padding: 0; margin-bottom: 8px; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+.rpe-value { margin-left: 4px; font-size: 0.9rem; font-weight: 700; color: var(--text); }
+.rpe-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.rpe-btn {
+  min-height: 44px; border-radius: 10px;
+  font: inherit; font-weight: 700; cursor: pointer;
+  border: 1px solid var(--border); background: var(--bg); color: var(--text);
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+}
+.rpe-btn:active { transform: scale(0.96); }
+.rpe-btn.is-selected { border-color: var(--primary); background: var(--primary); color: var(--primary-text); }
+.rpe:disabled .rpe-btn { opacity: 0.6; }
+
 @media (min-width: 480px) {
   .stats { grid-template-columns: repeat(4, 1fr); }
+  .rpe-grid { grid-template-columns: repeat(10, 1fr); }
 }

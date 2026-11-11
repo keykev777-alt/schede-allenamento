@@ -49,6 +49,7 @@ export interface ProgramExercise {
   load: string | null
   rest_seconds: number | null
   notes: string | null
+  rpe: number | null // 1-10, opzionale
   sort_order: number
 }
 

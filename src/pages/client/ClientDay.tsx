@@ -46,6 +46,8 @@ export default function ClientDay() {
   // id dell'esercizio in fase di salvataggio, per disabilitare il bottone
   const [pending, setPending] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
+  // id dell'esercizio il cui RPE è in fase di salvataggio
+  const [rpePending, setRpePending] = useState<string | null>(null)
 
   if (loading) return <p className="muted">Caricamento…</p>
   if (error) return <p className="error">{error}</p>
@@ -75,6 +77,22 @@ export default function ClientDay() {
     if (error) setActionError(errorMessage(error))
     else reload()
     setPending(null)
+  }
+
+  // Toccare il valore già selezionato lo azzera
+  const setRpe = async (it: ProgramExercise, value: number) => {
+    setRpePending(it.id)
+    setActionError(null)
+    const { data: rows, error } = await supabase
+      .from('program_exercises')
+      .update({ rpe: it.rpe === value ? null : value })
+      .eq('id', it.id)
+      .select('id')
+    if (error) setActionError(errorMessage(error))
+    // Con RLS un update non permesso non dà errore ma non tocca righe
+    else if (!rows?.length) setActionError('Impossibile salvare l’RPE.')
+    else reload()
+    setRpePending(null)
   }
 
   return (
@@ -121,6 +139,11 @@ export default function ClientDay() {
                   )}
                 </div>
               </div>
+              <RpePicker
+                value={it.rpe}
+                disabled={rpePending === it.id}
+                onSelect={(v) => setRpe(it, v)}
+              />
               <button
                 type="button"
                 className={`check-btn${done ? ' is-done' : ''}`}
@@ -152,6 +175,40 @@ function Stat({ label, value }: { label: string; value: string | number }) {
       <dt>{label}</dt>
       <dd>{value}</dd>
     </div>
+  )
+}
+
+const RPE_VALUES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+function RpePicker({
+  value,
+  disabled,
+  onSelect,
+}: {
+  value: number | null
+  disabled: boolean
+  onSelect: (value: number) => void
+}) {
+  return (
+    <fieldset className="rpe" disabled={disabled}>
+      <legend className="rpe-label">
+        RPE <span className="rpe-value">{value ?? '—'}</span>
+      </legend>
+      <div className="rpe-grid">
+        {RPE_VALUES.map((v) => (
+          <button
+            key={v}
+            type="button"
+            className={`rpe-btn${value === v ? ' is-selected' : ''}`}
+            aria-pressed={value === v}
+            aria-label={`RPE ${v}`}
+            onClick={() => onSelect(v)}
+          >
+            {v}
+          </button>
+        ))}
+      </div>
+    </fieldset>
   )
 }
 

@@ -10,8 +10,10 @@ import ProgramForm from './ProgramForm'
 
 type ProgramExerciseInput = Pick<
   ProgramExercise,
-  'exercise_id' | 'sets' | 'reps' | 'load' | 'rest_seconds' | 'notes'
+  'exercise_id' | 'sets' | 'reps' | 'load' | 'rest_seconds' | 'notes' | 'rpe'
 >
+
+const RPE_VALUES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 const nextOrder = (rows: { sort_order: number }[]) =>
   rows.reduce((max, r) => Math.max(max, r.sort_order), 0) + 1
@@ -328,6 +330,7 @@ function summary(it: ProgramExercise) {
   if (it.sets || it.reps) parts.push(`${it.sets ?? '?'} × ${it.reps ?? '?'}`)
   if (it.load) parts.push(it.load)
   if (it.rest_seconds) parts.push(`recupero ${it.rest_seconds}s`)
+  if (it.rpe != null) parts.push(`RPE ${it.rpe}`)
   if (it.notes) parts.push(it.notes)
   return parts.join(' · ') || '—'
 }
@@ -353,6 +356,7 @@ function ProgramExerciseForm({
   const [load, setLoad] = useState(initial?.load ?? '')
   const [rest, setRest] = useState(initial?.rest_seconds?.toString() ?? '')
   const [notes, setNotes] = useState(initial?.notes ?? '')
+  const [rpe, setRpe] = useState(initial?.rpe?.toString() ?? '')
   const [saving, setSaving] = useState(false)
 
   const handleSubmit = async (e: FormEvent) => {
@@ -365,6 +369,7 @@ function ProgramExerciseForm({
       load: load.trim() || null,
       rest_seconds: rest ? Number(rest) : null,
       notes: notes.trim() || null,
+      rpe: rpe ? Number(rpe) : null,
     })
     setSaving(false)
   }
@@ -393,11 +398,22 @@ function ProgramExerciseForm({
       </label>
       <label>
         Carico
-        <input value={load} onChange={(e) => setLoad(e.target.value)} placeholder="es. 60 kg, RPE 8" />
+        <input value={load} onChange={(e) => setLoad(e.target.value)} placeholder="es. 60 kg" />
       </label>
       <label>
         Recupero (secondi)
         <input type="number" min={0} inputMode="numeric" value={rest} onChange={(e) => setRest(e.target.value)} />
+      </label>
+      <label>
+        RPE
+        <select value={rpe} onChange={(e) => setRpe(e.target.value)}>
+          <option value="">— non impostato —</option>
+          {RPE_VALUES.map((v) => (
+            <option key={v} value={v}>
+              {v}
+            </option>
+          ))}
+        </select>
       </label>
       <label className="span-all">
         Note
